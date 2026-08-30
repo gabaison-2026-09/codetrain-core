@@ -1,0 +1,17 @@
+# codetrain-core migrator
+#
+# REPOSITORIES.md §2.1: 「誰が DB を移行するか」を一意にするため、
+# マイグレーションの実行主体を core のイメージ1つに閉じる。
+# LOCAL_DEV.md §10.2: ローカルの make migrate / make seed もこのイメージを通す。
+#
+# golang-migrate に加えて psql を入れているのは、seed の投入に使うため。
+FROM migrate/migrate:v4.19.1
+
+RUN apk add --no-cache bash postgresql16-client
+
+COPY migrations /migrations
+COPY seed /seed
+COPY scripts/migrator-entrypoint.sh /usr/local/bin/migrator
+
+ENTRYPOINT ["/usr/local/bin/migrator"]
+CMD ["up"]
