@@ -7,6 +7,11 @@ package domain
 
 import "time"
 
+// LLMGeneratedRawSourceID は「GitHub 収集をせず LLM のみで生成した問題」が指す
+// raw_source の固定行 ID。PoC 段階では question.raw_source_id にこの値を入れる。
+// マイグレーション 000001 が同じ ID で1行 INSERT している。
+const LLMGeneratedRawSourceID = "00000000-0000-0000-0000-000000000001"
+
 // QuestionType は問題タイプ。DB の question_type ENUM に対応する。
 type QuestionType string
 
@@ -28,9 +33,9 @@ const (
 	QuestionStatusRejected    QuestionStatus = "rejected"
 )
 
-// Skill はスキルツリーのトピック。
+// Skill はスキルツリーのトピック。ID は uuid。
 type Skill struct {
-	ID           int64       `json:"id"`
+	ID           string      `json:"id"`
 	Slug         string      `json:"slug"`
 	Name         string      `json:"name"`
 	Description  string      `json:"description,omitempty"`
@@ -38,16 +43,18 @@ type Skill struct {
 	Nodes        []SkillNode `json:"nodes,omitempty"`
 }
 
-// SkillNode はスキルツリーの単元。ParentID が nil ならツリーの起点。
+// SkillNode はスキルツリーの単元。ID は uuid。
+// 先修関係は skill_node_prerequisite（多対多）で表す。PrerequisiteNodeIDs が空なら
+// ツリーの起点。
 type SkillNode struct {
-	ID           int64  `json:"id"`
-	SkillID      int64  `json:"skill_id"`
-	ParentID     *int64 `json:"parent_id,omitempty"`
-	Slug         string `json:"slug"`
-	Name         string `json:"name"`
-	Description  string `json:"description,omitempty"`
-	Difficulty   int    `json:"difficulty"`
-	DisplayOrder int    `json:"display_order"`
+	ID                  string   `json:"id"`
+	SkillID             string   `json:"skill_id"`
+	PrerequisiteNodeIDs []string `json:"prerequisite_node_ids,omitempty"`
+	Slug                string   `json:"slug"`
+	Name                string   `json:"name"`
+	Description         string   `json:"description,omitempty"`
+	Difficulty          int      `json:"difficulty"`
+	DisplayOrder        int      `json:"display_order"`
 }
 
 // Choice は選択肢1つ。DB では question.choices に JSONB の配列で入る。
@@ -59,8 +66,8 @@ type Choice struct {
 // Question は設問。CorrectKeys と Explanation は採点前のクライアントに返さないため、
 // API のレスポンス型では別途絞り込む。
 type Question struct {
-	ID           int64          `json:"id"`
-	SkillNodeID  *int64         `json:"skill_node_id,omitempty"`
+	ID           string         `json:"id"`
+	SkillNodeID  *string        `json:"skill_node_id,omitempty"`
 	Type         QuestionType   `json:"type"`
 	Status       QuestionStatus `json:"status"`
 	Difficulty   int            `json:"difficulty"`
@@ -90,19 +97,44 @@ type Attribution struct {
 // User は認証済みユーザー。ExternalID は認証基盤上の識別子
 // （AUTH_MODE=cognito では Cognito の sub、dev では X-Dev-User の値）。
 type User struct {
-	ID          int64     `json:"id"`
+	ID          string    `json:"id"`
 	ExternalID  string    `json:"external_id"`
 	DisplayName string    `json:"display_name"`
 	Email       string    `json:"email,omitempty"`
 	CreatedAt   time.Time `json:"created_at"`
 }
 
-// Progress は XP・streak・現在のツリー位置。
-// 配点や回復間隔などのパラメータは OPEN_ISSUES B-3 で未確定のため、値の保持のみ。
+// Progress は XP・streak・現在のツリー位置。DB の user_progress は表示用キャッシュで、
+// XP の真実の源は attempt、streak の真実の源は daily_task。配点や回復間隔などの
+// パラメータは OPEN_ISSUES B-3 で未確定のため、値の保持のみ。
 type Progress struct {
 	XP                 int     `json:"xp"`
+	Level              int     `json:"level"`
 	StreakDays         int     `json:"streak_days"`
 	LastStudiedOn      *string `json:"last_studied_on,omitempty"`
 	Hearts             int     `json:"hearts"`
-	CurrentSkillNodeID *int64  `json:"current_skill_node_id,omitempty"`
+	CurrentSkillNodeID *string `json:"current_skill_node_id,omitempty"`
+}
+
+// TaskConfig はタスクスロット1件の条件。DB の user_task に対応する。
+// Difficulty が nil のときは、サーバがユーザーの正答率から推奨レベルを解決する。
+type TaskConfig struct {
+	SlotNo       int          `json:"slot_no"`
+	QuestionType QuestionType `json:"question_type"`
+	Language     string       `json:"language"`
+	Difficulty   *int         `json:"difficulty,omitempty"`
+}
+
+// DailyTask は「その日のホームに用意された1タスク」。DB の daily_task に対応する。
+// CompletedAt が nil なら未消化。ActivityDate の全スロットが消化済みになった日が
+// 連続タスク消化日数（streak）にカウントされる。
+type DailyTask struct {
+	ID           string       `json:"id"`
+	ActivityDate string       `json:"activity_date"`
+	SlotNo       int          `json:"slot_no"`
+	QuestionType QuestionType `json:"question_type"`
+	Language     string       `json:"language"`
+	Difficulty   int          `json:"difficulty"`
+	QuestionID   string       `json:"question_id"`
+	CompletedAt  *time.Time   `json:"completed_at,omitempty"`
 }
