@@ -224,6 +224,26 @@ type TaskOption struct {
 	Difficulty   int          `json:"difficulty"`
 }
 
+// QuestionDetail は GET /v1/questions/{id} のレスポンス（API_DESIGN.md §3）。
+// answered=false のとき CorrectKeys / Explanation は JSON null で返すため、
+// ポインタにして nil = null を表現する。
+type QuestionDetail struct {
+	ID           string       `json:"id"`
+	SkillNodeID  *string      `json:"skill_node_id,omitempty"`
+	Type         QuestionType `json:"type"`
+	Difficulty   int          `json:"difficulty"`
+	Title        string       `json:"title"`
+	Body         string       `json:"body"`
+	Code         string       `json:"code,omitempty"`
+	CodeLanguage string       `json:"code_language,omitempty"`
+	Choices      []Choice     `json:"choices"`
+	Tags         []string     `json:"tags,omitempty"`
+	Attribution  *Attribution `json:"attribution,omitempty"`
+	Answered     bool         `json:"answered"`
+	CorrectKeys  *[]string    `json:"correct_keys"`
+	Explanation  *string      `json:"explanation"`
+}
+
 // QuestionSummary は GET /v1/questions の軽量一覧行（API_DESIGN.md §3）。
 // 詳細（body / choices / correct_keys / explanation）は含めない。
 // Answered はログインユーザーがその問題に回答済みかどうか。
