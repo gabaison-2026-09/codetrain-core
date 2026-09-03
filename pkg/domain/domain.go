@@ -355,6 +355,21 @@ type AdminQuestion struct {
 	ReviewHistory []ReviewEntry  `json:"review_history"`
 }
 
+// AdminQuestionPatch は PATCH /v1/admin/questions/{id} の部分更新内容。
+// nil のフィールドは更新せず、空のスライスは明示的に空へ更新する。
+type AdminQuestionPatch struct {
+	Title        *string   `json:"title"`
+	Body         *string   `json:"body"`
+	Code         *string   `json:"code"`
+	CodeLanguage *string   `json:"code_language"`
+	Choices      *[]Choice `json:"choices"`
+	CorrectKeys  *[]string `json:"correct_keys"`
+	Explanation  *string   `json:"explanation"`
+	Difficulty   *int      `json:"difficulty"`
+	Tags         *[]string `json:"tags"`
+	SkillNodeID  *string   `json:"skill_node_id"`
+}
+
 // AdminQuestionSummary は GET /v1/admin/questions の一覧行（status を問わない横断検索）。
 type AdminQuestionSummary struct {
 	ID         string         `json:"id"`
