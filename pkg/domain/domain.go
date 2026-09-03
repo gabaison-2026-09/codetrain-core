@@ -150,6 +150,19 @@ type DailyTask struct {
 	CompletedAt  *time.Time   `json:"completed_at,omitempty"`
 }
 
+type CalendarDay struct {
+	Date           string `json:"date"`
+	TotalSlots     int    `json:"total_slots"`
+	CompletedSlots int    `json:"completed_slots"`
+	Completed      bool   `json:"completed"`
+}
+
+type Calendar struct {
+	Days          []CalendarDay `json:"days"`
+	StreakDays    int           `json:"streak_days"`
+	LastStudiedOn *string       `json:"last_studied_on"`
+}
+
 // ReviewDecision はレビュー判定。DB の review_decision ENUM に対応する。
 // レビュー待ち中は review_queue.decision を NULL とするため、
 // 未判定を表す型では *ReviewDecision を使う。
