@@ -111,6 +111,7 @@ type User struct {
 	ExternalID  string    `json:"external_id"`
 	DisplayName string    `json:"display_name"`
 	Email       string    `json:"email,omitempty"`
+	AvatarURL   string    `json:"avatar_url,omitempty"`
 	CreatedAt   time.Time `json:"created_at"`
 }
 
