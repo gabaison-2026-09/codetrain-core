@@ -43,6 +43,16 @@ const (
 	QuestionStatusRejected    QuestionStatus = "rejected"
 )
 
+// ValidQuestionStatus は s が question_status ENUM の4値のいずれかなら true。
+func ValidQuestionStatus(s string) bool {
+	switch QuestionStatus(s) {
+	case QuestionStatusDraft, QuestionStatusNeedsReview,
+		QuestionStatusPublished, QuestionStatusRejected:
+		return true
+	}
+	return false
+}
+
 // Skill はスキルツリーのトピック。ID は uuid。
 type Skill struct {
 	ID           string      `json:"id"`
@@ -353,6 +363,18 @@ type AdminQuestionSummary struct {
 	Difficulty int            `json:"difficulty"`
 	Title      string         `json:"title"`
 	CreatedAt  time.Time      `json:"created_at"`
+}
+
+// AdminQuestionSearch は管理者向け問題検索の条件。
+type AdminQuestionSearch struct {
+	Status          QuestionStatus
+	Type            QuestionType
+	Language        string
+	SkillID         string
+	Query           string
+	CursorCreatedAt *time.Time
+	CursorID        string
+	Limit           int
 }
 
 // ReviewQueueItem は GET /v1/admin/review-queue の一覧行
