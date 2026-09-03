@@ -177,8 +177,9 @@ type QuestionPreview struct {
 }
 
 type Home struct {
-	Tasks    []HomeTask `json:"tasks"`
-	Progress Progress   `json:"progress"`
+	ActivityDate string     `json:"activity_date"`
+	Tasks        []HomeTask `json:"tasks"`
+	Progress     Progress   `json:"progress"`
 }
 
 type CalendarDay struct {
