@@ -147,7 +147,28 @@ type DailyTask struct {
 	Language     string       `json:"language"`
 	Difficulty   int          `json:"difficulty"`
 	QuestionID   string       `json:"question_id"`
-	CompletedAt  *time.Time   `json:"completed_at,omitempty"`
+	CompletedAt  *time.Time   `json:"completed_at"`
+}
+
+type HomeTask struct {
+	DailyTask
+	Question QuestionPreview `json:"question"`
+}
+
+type QuestionPreview struct {
+	ID           string       `json:"id"`
+	Type         QuestionType `json:"type"`
+	Difficulty   int          `json:"difficulty"`
+	Title        string       `json:"title"`
+	Body         string       `json:"body"`
+	Code         string       `json:"code,omitempty"`
+	CodeLanguage string       `json:"code_language,omitempty"`
+	Choices      []Choice     `json:"choices"`
+}
+
+type Home struct {
+	Tasks    []HomeTask `json:"tasks"`
+	Progress Progress   `json:"progress"`
 }
 
 type CalendarDay struct {
