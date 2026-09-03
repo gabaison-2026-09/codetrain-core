@@ -223,7 +223,7 @@ console.log(x);',
  ARRAY['javascript','scope'])
 ON CONFLICT (id) DO NOTHING;
 
--- レビュー画面（admin）の確認用に、レビュー待ち（decision IS NULL）の問題も1件入れておく。
+-- レビュー画面（admin）の確認用に、レビュー待ち（decision IS NULL）の問題も入れておく。
 INSERT INTO question (
     id, skill_node_id, raw_source_id, type, status, difficulty,
     title, body, code, code_language, choices, correct_keys, explanation, tags,
@@ -238,11 +238,23 @@ INSERT INTO question (
  '["a"]',
  '配列は空文字列に、オブジェクトは "[object Object]" に変換されて連結される。',
  ARRAY['javascript','coercion'],
- 'question_gen.v1', 'claude-haiku-4-5-20251001', 812, now())
+ 'question_gen.v1', 'claude-haiku-4-5-20251001', 812, now()),
+
+('d0000000-0000-0000-0000-00000000000e', 'b0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'output_prediction', 'needs_review', 2,
+ '配列の型強制と + 演算子',
+ '次のコードを実行したときの出力として正しいものはどれですか。',
+ E'const a = [1, 2];\nconst b = [3, 4];\nconsole.log(a + b);',
+ 'javascript',
+ '[{"key":"a","text":"[1, 2, 3, 4]"},{"key":"b","text":"\"1,23,4\""},{"key":"c","text":"NaN"},{"key":"d","text":"undefined"}]',
+ '["b"]',
+ '+ 演算子で配列を使うと、JavaScript は配列を文字列に型強制します。a.toString() は "1,2" に、b.toString() は "3,4" になり、文字列連結により "1,23,4" が出力されます。a は配列連結を期待した誤答、c は「無効な操作は NaN」という誤解、d は型エラーだと思い込んだ誤答です。',
+ ARRAY['type-coercion','operator','string-conversion'],
+ 'question_gen.v1', 'claude-haiku-4-5-20251001', 950, now())
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO review_queue (question_id, decision, created_at) VALUES
-    ('d0000000-0000-0000-0000-00000000000d', NULL, now())
+    ('d0000000-0000-0000-0000-00000000000d', NULL, now()),
+    ('d0000000-0000-0000-0000-00000000000e', NULL, now())
 ON CONFLICT (question_id) WHERE decision IS NULL DO NOTHING;
 
 -- ---------------------------------------------------------------------------
