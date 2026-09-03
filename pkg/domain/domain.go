@@ -133,7 +133,7 @@ type TaskConfig struct {
 	SlotNo       int          `json:"slot_no"`
 	QuestionType QuestionType `json:"question_type"`
 	Language     string       `json:"language"`
-	Difficulty   *int         `json:"difficulty,omitempty"`
+	Difficulty   *int         `json:"difficulty"`
 }
 
 // DailyTask は「その日のホームに用意された1タスク」。DB の daily_task に対応する。
