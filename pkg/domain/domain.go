@@ -43,6 +43,16 @@ const (
 	QuestionStatusRejected    QuestionStatus = "rejected"
 )
 
+// ValidQuestionStatus は s が question_status ENUM の4値のいずれかなら true。
+func ValidQuestionStatus(s string) bool {
+	switch QuestionStatus(s) {
+	case QuestionStatusDraft, QuestionStatusNeedsReview,
+		QuestionStatusPublished, QuestionStatusRejected:
+		return true
+	}
+	return false
+}
+
 // Skill はスキルツリーのトピック。ID は uuid。
 type Skill struct {
 	ID           string      `json:"id"`
@@ -133,7 +143,7 @@ type TaskConfig struct {
 	SlotNo       int          `json:"slot_no"`
 	QuestionType QuestionType `json:"question_type"`
 	Language     string       `json:"language"`
-	Difficulty   *int         `json:"difficulty,omitempty"`
+	Difficulty   *int         `json:"difficulty"`
 }
 
 // DailyTask は「その日のホームに用意された1タスク」。DB の daily_task に対応する。
@@ -147,7 +157,41 @@ type DailyTask struct {
 	Language     string       `json:"language"`
 	Difficulty   int          `json:"difficulty"`
 	QuestionID   string       `json:"question_id"`
-	CompletedAt  *time.Time   `json:"completed_at,omitempty"`
+	CompletedAt  *time.Time   `json:"completed_at"`
+}
+
+type HomeTask struct {
+	DailyTask
+	Question QuestionPreview `json:"question"`
+}
+
+type QuestionPreview struct {
+	ID           string       `json:"id"`
+	Type         QuestionType `json:"type"`
+	Difficulty   int          `json:"difficulty"`
+	Title        string       `json:"title"`
+	Body         string       `json:"body"`
+	Code         string       `json:"code,omitempty"`
+	CodeLanguage string       `json:"code_language,omitempty"`
+	Choices      []Choice     `json:"choices"`
+}
+
+type Home struct {
+	Tasks    []HomeTask `json:"tasks"`
+	Progress Progress   `json:"progress"`
+}
+
+type CalendarDay struct {
+	Date           string `json:"date"`
+	TotalSlots     int    `json:"total_slots"`
+	CompletedSlots int    `json:"completed_slots"`
+	Completed      bool   `json:"completed"`
+}
+
+type Calendar struct {
+	Days          []CalendarDay `json:"days"`
+	StreakDays    int           `json:"streak_days"`
+	LastStudiedOn *string       `json:"last_studied_on"`
 }
 
 // ReviewDecision はレビュー判定。DB の review_decision ENUM に対応する。
@@ -311,6 +355,21 @@ type AdminQuestion struct {
 	ReviewHistory []ReviewEntry  `json:"review_history"`
 }
 
+// AdminQuestionPatch は PATCH /v1/admin/questions/{id} の部分更新内容。
+// nil のフィールドは更新せず、空のスライスは明示的に空へ更新する。
+type AdminQuestionPatch struct {
+	Title        *string   `json:"title"`
+	Body         *string   `json:"body"`
+	Code         *string   `json:"code"`
+	CodeLanguage *string   `json:"code_language"`
+	Choices      *[]Choice `json:"choices"`
+	CorrectKeys  *[]string `json:"correct_keys"`
+	Explanation  *string   `json:"explanation"`
+	Difficulty   *int      `json:"difficulty"`
+	Tags         *[]string `json:"tags"`
+	SkillNodeID  *string   `json:"skill_node_id"`
+}
+
 // AdminQuestionSummary は GET /v1/admin/questions の一覧行（status を問わない横断検索）。
 type AdminQuestionSummary struct {
 	ID         string         `json:"id"`
@@ -319,6 +378,18 @@ type AdminQuestionSummary struct {
 	Difficulty int            `json:"difficulty"`
 	Title      string         `json:"title"`
 	CreatedAt  time.Time      `json:"created_at"`
+}
+
+// AdminQuestionSearch は管理者向け問題検索の条件。
+type AdminQuestionSearch struct {
+	Status          QuestionStatus
+	Type            QuestionType
+	Language        string
+	SkillID         string
+	Query           string
+	CursorCreatedAt *time.Time
+	CursorID        string
+	Limit           int
 }
 
 // ReviewQueueItem は GET /v1/admin/review-queue の一覧行
