@@ -23,6 +23,16 @@ const (
 	QuestionTypeBestPractice     QuestionType = "best_practice"
 )
 
+// ValidQuestionType は s が question_type ENUM の5値のいずれかなら true。
+func ValidQuestionType(s string) bool {
+	switch QuestionType(s) {
+	case QuestionTypeCodeReading, QuestionTypeOutputPrediction,
+		QuestionTypeBugFinding, QuestionTypeFillInBlank, QuestionTypeBestPractice:
+		return true
+	}
+	return false
+}
+
 // QuestionStatus は問題のライフサイクル。DB の question_status ENUM に対応する。
 type QuestionStatus string
 
@@ -217,6 +227,7 @@ type TaskOption struct {
 // QuestionSummary は GET /v1/questions の軽量一覧行（API_DESIGN.md §3）。
 // 詳細（body / choices / correct_keys / explanation）は含めない。
 // Answered はログインユーザーがその問題に回答済みかどうか。
+// CreatedAt はカーソルキー用で JSON には出さない。
 type QuestionSummary struct {
 	ID           string       `json:"id"`
 	Type         QuestionType `json:"type"`
@@ -226,6 +237,22 @@ type QuestionSummary struct {
 	Tags         []string     `json:"tags,omitempty"`
 	SkillNodeID  *string      `json:"skill_node_id,omitempty"`
 	Answered     bool         `json:"answered"`
+	CreatedAt    time.Time    `json:"-"`
+}
+
+// QuestionSearch は published 問題の検索条件。指定されたフィールドだけ絞る。
+// Limit は返却件数（repository は Limit+1 件取得して次頁判定に使う）。
+type QuestionSearch struct {
+	SkillNodeID     string
+	Type            QuestionType
+	Language        string
+	Difficulty      *int
+	Tags            []string
+	Query           string
+	UnansweredOnly  bool
+	CursorCreatedAt *time.Time
+	CursorID        string
+	Limit           int
 }
 
 // ReviewEntry は AdminQuestion.ReviewHistory の1行（review_queue 行）。
